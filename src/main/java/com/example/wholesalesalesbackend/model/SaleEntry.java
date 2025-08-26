@@ -65,4 +65,6 @@ public class SaleEntry {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    private String searchFilter;
+
 }

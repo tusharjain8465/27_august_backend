@@ -22,11 +22,13 @@ import com.example.wholesalesalesbackend.dto.SaleEntryRequestDTO;
 import com.example.wholesalesalesbackend.dto.SaleUpdateRequest;
 import com.example.wholesalesalesbackend.model.Client;
 import com.example.wholesalesalesbackend.model.SaleEntry;
+import com.example.wholesalesalesbackend.model.User;
 import com.example.wholesalesalesbackend.repository.ClientRepository;
 import com.example.wholesalesalesbackend.repository.DepositRepository;
 import com.example.wholesalesalesbackend.repository.ProfitAndSaleProjection;
 import com.example.wholesalesalesbackend.repository.SaleEntryRepository;
 import com.example.wholesalesalesbackend.repository.UserClientRepository;
+import com.example.wholesalesalesbackend.repository.UserRepository;
 
 import jakarta.transaction.Transactional;
 
@@ -38,6 +40,10 @@ public class SaleEntryService {
 
     @Autowired
     private ClientRepository clientRepository;
+
+     @Autowired
+    private UserRepository userRepository;
+
 
     @Autowired
     private DepositRepository depositRepository;
@@ -83,7 +89,9 @@ public class SaleEntryService {
             saleDateTimeInIST = LocalDateTime.now(indiaZone);
         }
 
-        String searchFilter = accessoryName + " " + " totalprice=" + totalPrice +" profit="+profit;
+        Optional<User> user = userRepository.findById(userId);
+
+        String searchFilter = accessoryName + " " + " totalprice=" + totalPrice +" profit="+profit + " " + user.get().getUsername();
 
         SaleEntry saleEntry = SaleEntry.builder()
                 .accessoryName(accessoryName)

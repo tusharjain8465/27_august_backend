@@ -83,6 +83,8 @@ public class SaleEntryService {
             saleDateTimeInIST = LocalDateTime.now(indiaZone);
         }
 
+        String searchFilter = accessoryName + " " + " totalprice=" + totalPrice +" profit="+profit;
+
         SaleEntry saleEntry = SaleEntry.builder()
                 .accessoryName(accessoryName)
                 .quantity(Optional.ofNullable(dto.getQuantity()).orElse(1))
@@ -94,6 +96,7 @@ public class SaleEntryService {
                 .client(client)
                 .deleteFlag(false)
                 .userId(userId)
+                .searchFilter(searchFilter)
                 .build();
 
         return saleEntryRepository.save(saleEntry);
@@ -544,25 +547,23 @@ public class SaleEntryService {
 
     }
 
-public Long getCountOfHistory(Long userId) {
-    ZoneId istZone = ZoneId.of("Asia/Kolkata");
+    public Long getCountOfHistory(Long userId) {
+        ZoneId istZone = ZoneId.of("Asia/Kolkata");
 
-    LocalDate todayIst = LocalDate.now(istZone);
+        LocalDate todayIst = LocalDate.now(istZone);
 
-    LocalDateTime fromDate = todayIst.atStartOfDay(istZone).toLocalDateTime(); 
-    LocalDateTime toDate = todayIst.atTime(LocalTime.MAX).atZone(istZone).toLocalDateTime();
+        LocalDateTime fromDate = todayIst.atStartOfDay(istZone).toLocalDateTime();
+        LocalDateTime toDate = todayIst.atTime(LocalTime.MAX).atZone(istZone).toLocalDateTime();
 
-    return saleEntryRepository.getCountOfHistory(fromDate, toDate, userId);
-}
+        return saleEntryRepository.getCountOfHistory(fromDate, toDate, userId);
+    }
 
-
-       public Long getCountOfDeposit(Long userId) {
+    public Long getCountOfDeposit(Long userId) {
         LocalDate today = LocalDate.now();
         LocalDateTime fromDate = today.atStartOfDay(); // 00:00:00
         LocalDateTime toDate = today.atTime(LocalTime.MAX); // 23:59:59.999999999
 
         return depositRepository.getCountOfDeposit(fromDate, toDate, userId);
     }
-
 
 }

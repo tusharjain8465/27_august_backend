@@ -143,7 +143,7 @@ public interface SaleEntryRepository extends JpaRepository<SaleEntry, Long> {
             WHERE (:clientId IS NULL OR s.client_id = :clientId)
               AND (s.sale_date_time >= COALESCE(:startDateTime, s.sale_date_time))
               AND (s.sale_date_time <= COALESCE(:endDateTime, s.sale_date_time))
-              AND (:searchText IS NULL OR LOWER(s.accessory_name) LIKE LOWER(CONCAT('%', :searchText, '%')))
+              AND (:searchText IS NULL OR LOWER(s.search_filter) LIKE LOWER(CONCAT('%', :searchText, '%')))
               AND s.delete_flag = FALSE
             """, countQuery = """
             SELECT COUNT(*)
@@ -151,7 +151,7 @@ public interface SaleEntryRepository extends JpaRepository<SaleEntry, Long> {
             WHERE (:clientId IS NULL OR s.client_id = :clientId)
               AND (s.sale_date_time >= COALESCE(:startDateTime, s.sale_date_time))
               AND (s.sale_date_time <= COALESCE(:endDateTime, s.sale_date_time))
-              AND (:searchText IS NULL OR LOWER(s.accessory_name) LIKE LOWER(CONCAT('%', :searchText, '%')))
+              AND (:searchText IS NULL OR LOWER(s.search_filter) LIKE LOWER(CONCAT('%', :searchText, '%')))
               AND s.delete_flag = FALSE
             """, nativeQuery = true)
     Page<SaleEntry> findAllWithFiltersWithClientId(
@@ -166,7 +166,7 @@ public interface SaleEntryRepository extends JpaRepository<SaleEntry, Long> {
             FROM sale_entry s
             WHERE (s.sale_date_time >= COALESCE(:startDateTime, s.sale_date_time))
               AND (s.sale_date_time <= COALESCE(:endDateTime, s.sale_date_time))
-              AND (:searchText IS NULL OR LOWER(s.accessory_name) LIKE LOWER(CONCAT('%', :searchText, '%')))
+              AND (:searchText IS NULL OR LOWER(s.search_filter) LIKE LOWER(CONCAT('%', :searchText, '%')))
               AND s.delete_flag = FALSE
               AND s.client_id IN (
                   SELECT client_id
@@ -178,7 +178,7 @@ public interface SaleEntryRepository extends JpaRepository<SaleEntry, Long> {
             FROM sale_entry s
             WHERE (s.sale_date_time >= COALESCE(:startDateTime, s.sale_date_time))
               AND (s.sale_date_time <= COALESCE(:endDateTime, s.sale_date_time))
-              AND (:searchText IS NULL OR LOWER(s.accessory_name) LIKE LOWER(CONCAT('%', :searchText, '%')))
+              AND (:searchText IS NULL OR LOWER(s.search_filter) LIKE LOWER(CONCAT('%', :searchText, '%')))
               AND s.delete_flag = FALSE
               AND s.client_id IN (
                   SELECT client_id

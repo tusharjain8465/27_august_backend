@@ -544,13 +544,16 @@ public class SaleEntryService {
 
     }
 
-    public Long getCountOfHistory(Long userId) {
-        LocalDate today = LocalDate.now();
-        LocalDateTime fromDate = today.atStartOfDay(); // 00:00:00
-        LocalDateTime toDate = today.atTime(LocalTime.MAX); // 23:59:59.999999999
+public Long getCountOfHistory(Long userId) {
+    ZoneId istZone = ZoneId.of("Asia/Kolkata");
 
-        return saleEntryRepository.getCountOfHistory(fromDate, toDate, userId);
-    }
+    LocalDate todayIst = LocalDate.now(istZone);
+
+    LocalDateTime fromDate = todayIst.atStartOfDay(istZone).toLocalDateTime(); 
+    LocalDateTime toDate = todayIst.atTime(LocalTime.MAX).atZone(istZone).toLocalDateTime();
+
+    return saleEntryRepository.getCountOfHistory(fromDate, toDate, userId);
+}
 
 
        public Long getCountOfDeposit(Long userId) {

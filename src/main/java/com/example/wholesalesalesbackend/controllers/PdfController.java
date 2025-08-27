@@ -12,20 +12,27 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -37,10 +44,17 @@ import com.example.wholesalesalesbackend.dto.QuotationRequest;
 import com.example.wholesalesalesbackend.model.Client;
 import com.example.wholesalesalesbackend.model.Deposit;
 import com.example.wholesalesalesbackend.model.SaleEntry;
+import com.example.wholesalesalesbackend.model.User;
+import com.example.wholesalesalesbackend.model.UserClientFeature;
 import com.example.wholesalesalesbackend.repository.DepositRepository;
 import com.example.wholesalesalesbackend.repository.SaleEntryRepository;
+import com.example.wholesalesalesbackend.repository.UserClientRepository;
+import com.example.wholesalesalesbackend.repository.UserRepository;
 import com.example.wholesalesalesbackend.service.ClientService;
 import com.example.wholesalesalesbackend.service.PdfService;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 
 @RestController
 @RequestMapping("/api/pdf")
@@ -57,6 +71,77 @@ public class PdfController {
 
     @Autowired(required = false)
     DepositRepository depositRepository;
+
+    @Autowired(required = false)
+    UserRepository userRepository;
+
+    @Autowired(required = false)
+    UserClientRepository userClientRepository;
+
+    @Autowired(required = false)
+    private JavaMailSender mailSender;
+
+    @GetMapping("/send-pdf-backup-on-mail")
+    @Async
+    public Map<String, Object> sendPdfDailyPerUserOfAllClient() throws IOException, MessagingException {
+        List<User> allUsers = userRepository.findAll();
+        Map<String, Object> response = new HashMap<>();
+
+        ZoneId INDIA_ZONE = ZoneId.of("Asia/Kolkata");
+        LocalDate today = LocalDate.now(INDIA_ZONE);
+        LocalDateTime fromDate = today.atStartOfDay();
+        LocalDateTime toDate = today.atTime(LocalTime.MAX);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yy"); // safe filename format
+        String formattedDate = today.format(formatter);
+
+        for (User eachUser : allUsers) {
+            List<UserClientFeature> clients = userClientRepository.findAllByUserId(eachUser.getId());
+
+            // Store all PDFs in a map for this user
+            Map<String, byte[]> pdfMap = new HashMap<>();
+
+            for (UserClientFeature eachClient : clients) {
+                byte[] pdfBytes = generateSalesPdf(
+                        eachClient.getClientId(),
+                        fromDate,
+                        toDate,
+                        null,
+                        null,
+                        null,
+                        eachUser.getId(),
+                        null).getBody();
+
+                Client client = clientService.getClientById(eachClient.getClientId());
+
+                // Filename: clientName_date_username.pdf
+                String filename = client.getName() + "_" + formattedDate + "_" + eachUser.getUsername() + ".pdf";
+                pdfMap.put(filename, pdfBytes);
+            }
+
+            // Send one mail with multiple attachments
+            sendMailWithMultipleAttachments(eachUser.getMail(), pdfMap, formattedDate);
+        }
+
+        response.put("Pdf Sent", LocalDateTime.now());
+        return response;
+    }
+
+    private void sendMailWithMultipleAttachments(String to, Map<String, byte[]> pdfMap, String formattedDate)
+            throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        helper.setTo(to);
+        helper.setSubject("Daily Sales Reports - " + formattedDate);
+        helper.setText("Attached are your sales reports for all clients on " + formattedDate + ".");
+
+        for (Map.Entry<String, byte[]> entry : pdfMap.entrySet()) {
+            helper.addAttachment(entry.getKey(), new ByteArrayResource(entry.getValue()));
+        }
+
+        mailSender.send(message);
+    }
 
     @GetMapping("/sales")
     public ResponseEntity<byte[]> generateSalesPdf(
@@ -113,16 +198,16 @@ public class PdfController {
             clientName = "All_Clients";
 
             if (oldBalance == null) {
-                oldBalance = saleEntryRepository.getOldBalance(from,userId);
+                oldBalance = saleEntryRepository.getOldBalance(from, userId);
             }
 
             sales = saleEntryRepository.findBySaleDateBetweenOrderBySaleDateTimeDescCustom(
-                    fromLocalDate, toLocalDate,userId);
+                    fromLocalDate, toLocalDate, userId);
 
-            depoEntries = depositRepository.findByDepositDateBetweenOrderByDepositDateDescCustom(userId,fromLocalDate,
+            depoEntries = depositRepository.findByDepositDateBetweenOrderByDepositDateDescCustom(userId, fromLocalDate,
                     toLocalDate);
 
-            depositValueofAll = depositRepository.getTotalDepositOfAllClient(userId,from);
+            depositValueofAll = depositRepository.getTotalDepositOfAllClient(userId, from);
 
             if (oldBalance != null && depositValueofAll != null) {
                 oldBalance = oldBalance - depositValueofAll;

@@ -22,5 +22,7 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     List<Client> findAllByIdIn(List<Long> clientIds);
 
+    List<Client> findByIdInOrderByNameAsc(List<Long> clientIds);
+
 
 }

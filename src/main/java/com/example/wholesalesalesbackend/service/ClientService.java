@@ -141,7 +141,7 @@ public class ClientService {
 
     public List<Client> getAllClients(Long userId) {
         List<Long> clientIds = userClientRepository.fetchClientIdsByUserId(userId);
-        return clientRepository.findAllByIdIn(clientIds);
+        return clientRepository.findByIdInOrderByNameAsc(clientIds);
     }
 
     public Client getClientById(Long id) {

@@ -24,7 +24,7 @@ import com.example.wholesalesalesbackend.service.ClientService;
 import jakarta.validation.Valid;
 
 @RestController
-@CrossOrigin(origins = "https://27augustfrontend-vercel.vercel.app")
+@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/api/clients")
 public class ClientController {
 
@@ -53,7 +53,7 @@ public class ClientController {
 
     @GetMapping("/all")
     public ResponseEntity<List<Client>> getAllClients(@RequestParam Long userId) {
-        return ResponseEntity.ok(clientService.getAllClients(userId));
+        return ResponseEntity.ok(clientService.getAllClientsWithoutSales(userId));
     }
 
     @GetMapping("/{id}")
@@ -70,7 +70,7 @@ public class ClientController {
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteClient(@PathVariable Long id, @RequestParam Long userId) {
-        String output = clientService.deleteClient(id,userId);
+        String output = clientService.deleteClient(id, userId);
         return ResponseEntity.ok(output);
     }
 

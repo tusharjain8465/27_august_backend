@@ -221,9 +221,10 @@ public class SaleEntryController {
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime to,
             @RequestParam(required = false) Long days,
+            @RequestParam(required = false) Long userId,
             @RequestParam(required = false) Long clientId) {
 
-        return ResponseEntity.ok(saleEntryService.getTotalProfitByDateRange(from, to, days, clientId));
+        return ResponseEntity.ok(saleEntryService.getTotalProfitByDateRange(from, to, days, clientId, userId));
     }
 
     public List<SaleEntry> filterNonDeleted(List<SaleEntry> entries) {

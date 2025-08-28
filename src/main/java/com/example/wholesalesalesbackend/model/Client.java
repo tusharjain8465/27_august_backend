@@ -45,9 +45,8 @@ public class Client {
     @Column(name = "user_id")
     private Long userId;
 
-    // Make sure "client" matches the field name in SaleEntry
-    @JsonIgnore
     @OneToMany(mappedBy = "client", fetch = FetchType.LAZY)
+    @JsonIgnore // prevent sales from appearing in JSON
     private List<SaleEntry> sales;
 
 }

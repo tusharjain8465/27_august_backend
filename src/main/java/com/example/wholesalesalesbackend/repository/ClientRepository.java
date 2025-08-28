@@ -2,6 +2,7 @@ package com.example.wholesalesalesbackend.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.example.wholesalesalesbackend.model.Client;
@@ -22,7 +23,7 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     List<Client> findAllByIdIn(List<Long> clientIds);
 
-    List<Client> findByIdInOrderByNameAsc(List<Long> clientIds);
-
+    @Query(value = "SELECT * FROM clients where id in (:clientIds) order by name asc", nativeQuery = true)
+    List<Client> findAllClientsOnlyNative(@Param("clientIds") List<Long> clientIds);
 
 }

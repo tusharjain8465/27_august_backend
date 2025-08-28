@@ -41,9 +41,8 @@ public class SaleEntryService {
     @Autowired
     private ClientRepository clientRepository;
 
-     @Autowired
+    @Autowired
     private UserRepository userRepository;
-
 
     @Autowired
     private DepositRepository depositRepository;
@@ -91,7 +90,8 @@ public class SaleEntryService {
 
         Optional<User> user = userRepository.findById(userId);
 
-        String searchFilter = accessoryName + " " + " totalprice=" + totalPrice +" profit="+profit + " " + user.get().getUsername();
+        String searchFilter = accessoryName + " " + " totalprice=" + totalPrice + " profit=" + profit + " "
+                + user.get().getUsername();
 
         SaleEntry saleEntry = SaleEntry.builder()
                 .accessoryName(accessoryName)
@@ -317,8 +317,15 @@ public class SaleEntryService {
 
     public List<SaleEntry> getAllSales(Long userId) {
 
-        List<Long> clientds = userClientRepository.fetchClientIdsByUserId(userId);
-        return filterNonDeleted(saleEntryRepository.findByClientIdInOrderBySaleDateTimeDesc(clientds));
+        List<Long> clientIds = userClientRepository.fetchClientIdsByUserId(userId);
+
+        ZoneId istZone = ZoneId.of("Asia/Kolkata");
+        LocalDateTime fromDate = LocalDateTime.now(istZone).minusDays(3);
+
+        List<SaleEntry> sales = saleEntryRepository
+                .findRecentNonDeletedSalesByClientIds(clientIds, fromDate);
+
+        return filterNonDeleted(sales);
     }
 
     public List<SaleEntry> filterNonDeleted(List<SaleEntry> entries) {
@@ -408,7 +415,7 @@ public class SaleEntryService {
     }
 
     public ProfitAndSaleAndDeposit getTotalProfitByDateRange(LocalDateTime from, LocalDateTime to, Long days,
-            Long clientId) {
+            Long clientId, Long userId) {
 
         // If 'days' is provided but no from/to, calculate date range
         if (days != null && from == null && to == null) {
@@ -428,8 +435,11 @@ public class SaleEntryService {
             deposit = depositRepository.findTotalDepositBetweenDatesAndClientId(clientId, from, to);
 
         } else {
-            result = saleEntryRepository.getTotalPriceAndProfitBetweenDates(from, to);
-            deposit = depositRepository.findTotalDepositBetweenDates(from, to);
+
+            List<Long> clientIds = userClientRepository.fetchClientIdsByUserId(userId);
+
+            result = saleEntryRepository.getTotalPriceAndProfitBetweenDatesUserId(from, to, clientIds);
+            deposit = depositRepository.findTotalDepositBetweenDatesUserId(from, to, clientIds);
 
         }
 

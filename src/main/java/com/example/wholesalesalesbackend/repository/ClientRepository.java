@@ -23,7 +23,7 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     List<Client> findAllByIdIn(List<Long> clientIds);
 
-    @Query(value = "SELECT * FROM clients where id in (:clientIds) order by name asc", nativeQuery = true)
+    @Query(value = "SELECT * FROM clients WHERE id IN (:clientIds) ORDER BY name ASC", nativeQuery = true)
     List<Client> findAllClientsOnlyNative(@Param("clientIds") List<Long> clientIds);
 
 }

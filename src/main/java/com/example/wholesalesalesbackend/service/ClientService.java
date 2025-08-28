@@ -139,10 +139,12 @@ public class ClientService {
     // return savedClient;
     // }
 
-    public List<Client> getAllClients(Long userId) {
+
+       public List<Client> getAllClientsWithoutSales(Long userId) {
         List<Long> clientIds = userClientRepository.fetchClientIdsByUserId(userId);
-        return clientRepository.findByIdInOrderByNameAsc(clientIds);
+        return clientRepository.findAllClientsOnlyNative(clientIds);
     }
+
 
     public Client getClientById(Long id) {
         return clientRepository.findById(id)
@@ -174,7 +176,7 @@ public class ClientService {
         userClientRepository.deleteAllByclientId(existing.getId());
         // depositRepository.deleteAllByClientId(existing.getId());
 
-         clientRepository.delete(existing);
+        clientRepository.delete(existing);
         return "Deleted !!!";
     }
 
